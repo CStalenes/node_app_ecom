@@ -5,10 +5,8 @@ const {addArticle, getAllArticles, getAllArticlesByName, updateArticle, deleteAr
 
 router.post("/articles", addArticle);
 router.get("/articles", getAllArticles);
-router.get("/articles/nom_article/:nom_article", getAllArticlesByName);
+router.get("/articles/:nom_article", getAllArticlesByName);
 router.patch("/articles/:id", updateArticle);
 router.delete("/articles/:id",deleteArticle);
-
-//router.get('/articles', getAllArticle);
 
 module.exports = router;

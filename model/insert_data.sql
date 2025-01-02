@@ -1,7 +1,7 @@
-INSERT INTO User(email, mdp, role_user)
+INSERT INTO User(username, email, mdp, role_user)
 VALUES
-('jean.dupont@gmail.com', 'acid123','user'),
-('lea.doumbe@yahoo.fr', 'mera456','user');
+('jean2','jean.dupont@gmail.com', 'acid123','user'),
+('lea2','lea.doumbe@yahoo.fr', 'mera456','user');
 
 
 INSERT INTO Client (nom, prenom, adresse, ville, code_postal, pays) 

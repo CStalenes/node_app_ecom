@@ -19,13 +19,13 @@ exports.getAllPaiements = async (req, res) => {
         const sql = "SELECT * FROM Paiement";
         const [results] = await pool.query(sql); 
         if (results.length === 0) {
-            return res.status(404).json({ message: 'Aucune paiement trouvée' });  
+            return res.status(404).json({ message: 'paiement not found' });  
         }
         res.status(200).json({ results }); 
     } catch (err) {
         console.error('Error during fetching paiement:', err.message);
         if (!res.headersSent) {
-            res.status(500).json({ message: 'Erreur interne du serveur' }); 
+            res.status(500).json({ message: 'Internal server error' }); 
         }
     }
 }
@@ -37,21 +37,14 @@ exports.getAllPaiements = async (req, res) => {
 exports.getAllPaiementsByName = async (req, res) => {
     try {
         const { mode_paiement } = req.params;
-        const searchString = "'" + '%' + mode_paiement + '%' + "'";
-        const sql = `SELECT * FROM Paiement WHERE mode_paiement LIKE ${searchString};`
+        const sqlSearching = `SELECT * FROM Paiement WHERE mode_paiement LIKE ${searchString};`
+        const [searchResults] =  await pool.query(sqlSearching, [`%${mode_paiement}%`]);
 
-        await pool.query(sql, (error, rows) => {
-            if (error) {
-                console.error(error.message);
-                return res.status(500).json({ message: 'Internal server error' });
-            }
+        if(searchResults.length === 0){
+            res.status(400).json({message: 'Paiement not executed'});
+        }
 
-            if (rows.length === 0) {
-                return res.status(404).json({ message: 'Paiement name not found' });
-            }
-
-            res.status(200).json({ Paiement: rows });
-        });
+        res.status(200).json({Paiement: searchResults});
 
     } catch (err) {
         console.error(err.message);
@@ -61,7 +54,7 @@ exports.getAllPaiementsByName = async (req, res) => {
 
 
 //Update a Paiement
-exports.updatePaiement = (req, res) => {
+exports.updatePaiement = async (req, res) => {
     try {
         const { id } = req.params;
         const {montant, date_paiement, mode_paiement, statut, id_commande } = req.body;
@@ -69,27 +62,16 @@ exports.updatePaiement = (req, res) => {
         const sqlUpdate = "UPDATE Paiement SET montant = ?, mode_paiement = ?, date_paiement = ?, statut = ?, id_commande = ? WHERE id = ?";
 
        
-        pool.query(sqlCheckExistence, id, (error, existingRows) => {
-            if (error) {
-                console.error(error.message);
-                return res.status(500).json({ message: 'Internal server error' });
-            }
+        const [existingRows] = await pool.query(sqlCheckExistence, [id]);
 
-            if (existingRows.length === 0) {
-                return res.status(404).json({ message: 'Paiement not found' });
-            }
-
-            
-            pool.query(sqlUpdate, [ montant, date_paiement, mode_paiement, statut, id_commande], (updateError, updateResults) => {
-                if (updateError) {
-                    console.error(updateError.message);
-                    return res.status(500).json({ message: 'Internal server error' });
-                }
-                res.status(200).json({ message: 'Paiement has been updated' });
-            });
-        });
+        if (existingRows.length === 0) {
+            return res.status(404).json({ message: 'Paiement not found' });
+        }
+    
+        
+        const [updateResults] = await pool.query(sqlUpdate, [montant, date_paiement, mode_paiement, statut, id_commande , id]);
     } catch (err) {
-        console.error(err.message);
+        console.error('Error during updating paiement:', err.message);
         res.status(500).json({ message: 'Internal server error' });
     }
 };

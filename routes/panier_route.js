@@ -5,7 +5,7 @@ const {addPanier, getAllPaniers, getAllPaniersByName, updatePanier, deletePanier
 
 router.post("/paniers", addPanier);
 router.get("/paniers", getAllPaniers);
-router.get("/paniers/date/:date_creation", getAllPaniersByName);
+router.get("/paniers/:date_creation", getAllPaniersByName);
 router.patch("/paniers/:id", updatePanier);
 router.delete("/paniers/:id", deletePanier);
 

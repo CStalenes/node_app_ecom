@@ -3,16 +3,18 @@ CREATE DATABASE app_phone;
 USE app_phone;
 
 
-/*
-CREATE TABLE User(
+
+
+DROP TABLE IF EXISTS User;
+
+CREATE TABLE IF NOT EXISTS User(
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nom VARCHAR(50) NOT NULL,
-	prenom VARCHAR(50) NOT NULL,
+    username VARCHAR(50) NOT NULL,
     email VARCHAR(50) NOT NULL,
     mdp VARCHAR(50),
     role_user ENUM('admin','user') NOT NULL
 );
-*/
+
 
 
 CREATE TABLE Client (

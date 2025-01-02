@@ -19,13 +19,13 @@ exports.getAllClients = async (req, res) => {
         const sql = "SELECT * FROM Client";
         const [results] = await pool.query(sql); 
         if (results.length === 0) {
-            return res.status(404).json({ message: 'Aucune catégorie trouvée' });  
+            return res.status(404).json({ message: 'Client not found' });  
         }
         res.status(200).json({ results }); 
     } catch (err) {
-        console.error('Error during fetching categories:', err.message);
+        console.error('Error during fetching client:', err.message);
         if (!res.headersSent) {
-            res.status(500).json({ message: 'Erreur interne du serveur' }); 
+            res.status(500).json({ message: 'Internal server error' }); 
         }
     }
 }
@@ -36,22 +36,20 @@ exports.getAllClients = async (req, res) => {
 //Get All Client having the name in the param
 exports.getAllClientsByName = async (req, res) => {
     try {
-        const { nom_client } = req.params;
-        const searchString = "'" + '%' + nom_client + '%' + "'";
-        const sql = `SELECT * FROM Client WHERE nom LIKE ${searchString};`
+        const { nom } = req.params;
+       
+        const sqlSearching = `SELECT * FROM Client WHERE nom LIKE ?`;
+      
+        const [searchResults] = await pool.query(sqlSearching, [`%${nom}%`]);
+      
 
-        await pool.query(sql, (error, rows) => {
-            if (error) {
-                console.error(error.message);
-                return res.status(500).json({ message: 'Internal server error' });
-            }
+        if(searchResults.length === 0){
+            return res.status(404).json({message: 'Client not found'});
 
-            if (rows.length === 0) {
-                return res.status(404).json({ message: 'Client name not found' });
-            }
+        }
 
-            res.status(200).json({ Client: rows });
-        });
+        res.status(200).json({ Client : searchResults});
+       
 
     } catch (err) {
         console.error(err.message);
@@ -61,35 +59,27 @@ exports.getAllClientsByName = async (req, res) => {
 
 
 //Update a Client
-exports.updateClient = (req, res) => {
+exports.updateClient = async (req, res) => {
     try {
         const { id } = req.params;
         const { nom, prenom, adresse, ville, code_postal, pays } = req.body;
         const sqlCheckExistence = "SELECT * FROM Client WHERE id = ?";
         const sqlUpdate = "UPDATE Client SET nom = ?, prenom = ?,  adresse = ?, ville = ?,  code_postal = ?, pays = ? WHERE id = ?";
+        
+       
+        const [existingRows] = await pool.query(sqlCheckExistence, [id]);
 
        
-        pool.query(sqlCheckExistence, id, (error, existingRows) => {
-            if (error) {
-                console.error(error.message);
-                return res.status(500).json({ message: 'Internal server error' });
-            }
+        if (existingRows.length === 0) {
+            return res.status(404).json({ message: 'Client not found' });
+        }
+    
+        const [updateResults] = await pool.query(sqlUpdate, [nom, prenom, adresse, ville, code_postal, pays, id]);
+    
+        res.status(200).json({ message: 'Client has been updated' });
 
-            if (existingRows.length === 0) {
-                return res.status(404).json({ message: 'Client not found' });
-            }
-
-            
-            pool.query(sqlUpdate, [ nom, prenom, adresse, ville, code_postal, pays], (updateError, updateResults) => {
-                if (updateError) {
-                    console.error(updateError.message);
-                    return res.status(500).json({ message: 'Internal server error' });
-                }
-                res.status(200).json({ message: 'Client has been updated' });
-            });
-        });
-    } catch (err) {
-        console.error(err.message);
+    }catch(err) {
+        console.error('Error during updating :client:', err.message);
         res.status(500).json({ message: 'Internal server error' });
     }
 };

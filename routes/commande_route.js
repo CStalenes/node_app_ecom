@@ -5,7 +5,7 @@ const {addCommande, getAllCommandes, getAllCommandesByName, updateCommande, dele
 
 router.post("/commandes", addCommande);
 router.get("/commandes", getAllCommandes);
-router.get("/commandes/statut/:statut", getAllCommandesByName);
+router.get("/commandes/:statut", getAllCommandesByName);
 router.patch("/commandes/:id", updateCommande);
 router.delete("/commandes/:id", deleteCommande);
 

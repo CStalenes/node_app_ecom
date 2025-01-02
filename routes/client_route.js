@@ -5,7 +5,7 @@ const {addClient, getAllClients, getAllClientsByName, updateClient, deleteClient
 
 router.post("/clients", addClient);
 router.get("/clients", getAllClients);
-router.get("/clients/nom/:nom", getAllClientsByName);
+router.get("/clients/:nom", getAllClientsByName);
 router.patch("/clients/:id", updateClient);
 router.delete("/clients/:id",deleteClient);
 

@@ -15,26 +15,18 @@ exports.addCategorie = async (req, res) => {
 
 //Get all Categorie
 exports.getAllCategories = async (req, res) => {
-    /*try {
-        const sql = "SELECT * FROM Categorie";
-        await connection.query(sql, (error, results, fields) => {
-            res.status(200).json({ results });
-        });
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ message: 'Internal server error' });
-    }*/
+
     try {
         const sql = "SELECT * FROM Categorie";
-        const [results] = await pool.query(sql); // Utilisation de `mysql2/promise`
+        const [results] = await pool.query(sql); // pool car utilisation de `mysql2/promise`
         if (results.length === 0) {
-            return res.status(404).json({ message: 'Aucune catégorie trouvée' });  // Première réponse
+            return res.status(404).json({ message: 'Categorie not found' });  // Première réponse
         }
         res.status(200).json({ results });  // Seconde réponse envoyée seulement si les résultats existent
     } catch (err) {
         console.error('Error during fetching categories:', err.message);
         if (!res.headersSent) {
-            res.status(500).json({ message: 'Erreur interne du serveur' });  // Vérifie que les headers n'ont pas déjà été envoyés
+            res.status(500).json({ message: 'Internal server error' });  // Vérifie que les headers n'ont pas déjà été envoyés
         }
     }
 }
@@ -45,22 +37,24 @@ exports.getAllCategories = async (req, res) => {
 //Get All Categorie having the name in the param
 exports.getAllCategoriesByName = async (req, res) => {
     try {
-        const { nom_categorie } = req.params;
-        const searchString = "'" + '%' + nom_categorie + '%' + "'";
-        const sql = `SELECT * FROM Categorie WHERE nom_categorie LIKE ${searchString};`
+        //const {id } = req.params;
+        
+        const { nom_categorie, description_categorie} = req.body; 
+        const searchString = `%${nom_categorie}%`;
+        const sqlByname = `SELECT * FROM Categorie WHERE nom_categorie LIKE ?`;
+        
+    
+        // Exécution de la requête avec les paramètres
+        const [searchResults] = await pool.query(sqlByname, [searchString, `%${description_categorie}%`]);
+        //on affichera dans la res json id, nom_cat, desc_cat via le select * de la requete et grace à [ searchStr, %${description_categorie}% (pour recup chaque val du str ) ]
 
-        await pool.query(sql, (error, rows) => {
-            if (error) {
-                console.error(error.message);
-                return res.status(500).json({ message: 'Internal server error' });
-            }
+        if(searchResults.length === 0){
+            return res.status(404).json({message: 'Categorie not found'});
+        }
 
-            if (rows.length === 0) {
-                return res.status(404).json({ message: 'Categorie name not found' });
-            }
-
-            res.status(200).json({ Categorie: rows });
-        });
+        // Retourner les résultats trouvés
+        res.status(200).json({ Categorie: searchResults });
+        //le resultat de notre req json aura ce format 
 
     } catch (err) {
         console.error(err.message);
@@ -70,37 +64,31 @@ exports.getAllCategoriesByName = async (req, res) => {
 
 
 //Update a Categorie
-exports.updateCategorie = (req, res) => {
+exports.updateCategorie = async (req, res) => {
     try {
         const { id } = req.params;
         const { nom_categorie, description_categorie } = req.body;
         const sqlCheckExistence = "SELECT * FROM Categorie WHERE id = ?";
         const sqlUpdate = "UPDATE Categorie SET nom_categorie = ?, description_categorie = ? WHERE id = ?";
 
-       
-        pool.query(sqlCheckExistence, id, (error, existingRows) => {
-            if (error) {
-                console.error(error.message);
-                return res.status(500).json({ message: 'Internal server error' });
-            }
 
-            if (existingRows.length === 0) {
-                return res.status(404).json({ message: 'article not found' });
-            }
+    // Vérifie si la catégorie existe
+    const [existingRows] = await pool.query(sqlCheckExistence, [id]);
 
-            
-            pool.query(sqlUpdate, [ nom_categorie, description_categorie, id], (updateError, updateResults) => {
-                if (updateError) {
-                    console.error(updateError.message);
-                    return res.status(500).json({ message: 'Internal server error' });
-                }
-                res.status(200).json({ message: 'categorie has been updated' });
-            });
-        });
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ message: 'Internal server error' });
+    if (existingRows.length === 0) {
+        return res.status(404).json({ message: 'Category not found' });
     }
+
+    // Si la catégorie existe, mets à jour les données
+    const [updateResults] = await pool.query(sqlUpdate, [nom_categorie, description_categorie, id]);
+
+    // Si la mise à jour est réussie
+    res.status(200).json({ message: 'Category has been updated' });
+
+    } catch (err) {
+        console.error('Error during updating category:', err.message);
+        res.status(500).json({ message: 'Internal server error' });
+    } 
 };
 
 
@@ -125,7 +113,7 @@ exports.deleteCategorie = async (req, res) => {
         res.status(200).json({ message: 'Categorie has been deleted' });
  
     }catch(err) {
-        console.error('Error during deleting category:', err.message);
+        console.error('Error during deleting categorie:', err.message);
         res.status(500).json({ message: 'Internal server error' });
     }
 };

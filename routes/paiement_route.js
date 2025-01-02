@@ -5,7 +5,7 @@ const {addPaiement, getAllPaiements, getAllPaiementsByName, updatePaiement, dele
 
 router.post("/paiements", addPaiement);
 router.get("/paiements", getAllPaiements);
-router.get("/paiement/statut/:statut", getAllPaiementsByName);
+router.get("/paiement/:statut", getAllPaiementsByName);
 router.patch("/paiements/:id", updatePaiement);
 router.delete("/paiements/:id", deletePaiement);
 
